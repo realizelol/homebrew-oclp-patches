@@ -4,31 +4,36 @@ Fixes for Homebrew cask utilities on macOS with OpenCore Legacy Patcher (OCLP).
 
 ## Issue
 
-On OCLP systems, Swift's `CommandLine.arguments` incorrectly includes `swift-frontend` internal flags instead of stripping them, breaking `quarantine.swift`, `copy-xattrs.swift`, and `trash.swift`.
+On OCLP systems running macOS Sequoia, Swift's `CommandLine.arguments` incorrectly includes `swift-frontend` internal flags instead of stripping them. This breaks `quarantine.swift`, `copy-xattrs.swift`, and `trash.swift`.
 
-## Apply
+## Quick Install
 ```bash
-cd /usr/local/Homebrew && git apply ~/homebrew-oclp-patches/homebrew-oclp.patch
+git clone https://github.com/ajorpheus/homebrew-oclp-patches.git
+cd homebrew-oclp-patches
+./install.sh
+source ~/.zshrc
 ```
 
-Or one-liner:
+## What it does
+
+1. Patches the three affected Swift scripts
+2. Hides changes from `git status` / `brew doctor`
+3. Adds a shell wrapper to auto-reapply patches after `brew update`
+
+## Manual Apply
 ```bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/homebrew-oclp-patches/main/homebrew-oclp.patch | git -C /usr/local/Homebrew apply
+curl -sL https://raw.githubusercontent.com/ajorpheus/homebrew-oclp-patches/master/homebrew-oclp.patch | git -C /usr/local/Homebrew apply
 ```
 
-## Persist across `brew update`
-```bash
-cat << 'HOOK' > /usr/local/Homebrew/.git/hooks/post-merge
-#!/bin/bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/homebrew-oclp-patches/main/homebrew-oclp.patch | git -C /usr/local/Homebrew apply 2>/dev/null && echo "OCLP patches restored"
-HOOK
-chmod +x /usr/local/Homebrew/.git/hooks/post-merge
-```
-
-## Environment tested
+## Environment Tested
 
 - macOS: 15.6.1 (24G90)
 - Homebrew: 5.0.13
 - Xcode: 26.2
 - Swift: 6.2.3
 - OpenCore Legacy Patcher
+
+## Related
+
+- [Homebrew Issue #18656](https://github.com/Homebrew/brew/issues/18656)
+- [Homebrew Discussion #5482](https://github.com/orgs/Homebrew/discussions/5482)
