@@ -40,14 +40,22 @@ echo "  ✓ Changes hidden from git"
 
 # Install shell wrapper
 echo "[3/4] Installing shell wrapper..."
-ZSHRC="$HOME/.zshrc"
+if [[ "$SHELL" == "/bin/bash" ]]; then
+    ZSHRC="$HOME/.bashrc"
+else
+    ZSHRC="$HOME/.zshrc"
+fi
 WRAPPER='
 # Homebrew OCLP patch - auto-reapply after brew update
 brew() {
     command brew "$@"
     local ret=$?
     if [[ "$1" == "update" ]]; then
-        curl -sL "https://raw.githubusercontent.com/ajorpheus/homebrew-oclp-patches/master/homebrew-oclp.patch" | git -C /usr/local/Homebrew apply 2>/dev/null && echo "OCLP patches restored"
+        curl -sL "https://raw.githubusercontent.com/ajorpheus/homebrew-oclp-patches/master/homebrew-oclp.patch" | \
+            git -C /usr/local/Homebrew apply 2>/dev/null && echo "OCLP patches restored"
+        git -C "$HOMEBREW_DIR" update-index --assume-unchanged Library/Homebrew/cask/utils/copy-xattrs.swift
+        git -C "$HOMEBREW_DIR" update-index --assume-unchanged Library/Homebrew/cask/utils/quarantine.swift
+        git -C "$HOMEBREW_DIR" update-index --assume-unchanged Library/Homebrew/cask/utils/trash.swift
     fi
     return $ret
 }'
@@ -56,7 +64,7 @@ if grep -q "Homebrew OCLP patch" "$ZSHRC" 2>/dev/null; then
     echo "  ✓ Shell wrapper already installed"
 else
     echo "$WRAPPER" >> "$ZSHRC"
-    echo "  ✓ Shell wrapper added to ~/.zshrc"
+    echo "  ✓ Shell wrapper added to $ZSHRC"
 fi
 
 # Verify installation
@@ -98,7 +106,7 @@ echo ""
 if $PASS; then
     echo "=== Installation complete! ==="
     echo ""
-    echo "Run 'source ~/.zshrc' or restart your terminal to enable auto-patching."
+    echo "Run 'source $ZSHRC' or restart your terminal to enable auto-patching."
 else
     echo "=== Installation had issues ==="
     exit 1
